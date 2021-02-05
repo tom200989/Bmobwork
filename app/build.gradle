@@ -1,0 +1,58 @@
+apply plugin: 'com.android.application'
+
+android {
+    // BMOB需要
+    useLibrary 'org.apache.http.legacy'
+    
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
+
+    defaultConfig {
+        applicationId "com.bmobwork.bmobwork"
+        minSdkVersion 21
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+
+dependencies {
+    api fileTree(dir: "libs", include: ["*.jar"])
+    api 'androidx.appcompat:appcompat:1.2.0'
+    api 'androidx.constraintlayout:constraintlayout:2.0.4'
+
+    // BMOB需要: 核心包
+    api 'cn.bmob.android:bmob-sdk:3.7.8'
+    // BMOB需要: RX系列
+    api "io.reactivex.rxjava2:rxjava:2.2.19"
+    // BMOB需要: RX系列
+    api 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    // BMOB需要: 网络
+    api 'com.squareup.okhttp3:okhttp:4.7.2'
+    // BMOB需要: 网络
+    api 'com.squareup.okio:okio:2.6.0'
+    // BMOB需要: 解析
+    api 'com.google.code.gson:gson:2.8.6'
+    // BMOB需要: 解析2
+    api 'com.alibaba:fastjson:1.2.73'
+
+}
