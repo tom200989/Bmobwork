@@ -15,6 +15,7 @@ import cn.bmob.v3.listener.UploadFileListener;
 
 /*
  * Created by Administrator on 2021/02/005.
+ * 该类用于文件操作
  */
 public class BmobFi extends BmobBase {
 

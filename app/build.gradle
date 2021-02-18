@@ -26,6 +26,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
 }
 
 repositories {
@@ -54,5 +55,9 @@ dependencies {
     api 'com.google.code.gson:gson:2.8.6'
     // BMOB需要: 解析2
     api 'com.alibaba:fastjson:1.2.73'
+    // BMOB需要: IM
+    api(name: 'bmob-im-2.1.5', ext: 'aar')
+    // BMOB需要: eventbus
+    api 'org.greenrobot:eventbus:3.2.0'
 
 }
