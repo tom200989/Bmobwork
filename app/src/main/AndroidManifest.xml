@@ -17,6 +17,8 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!--通知震动-->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- 前台进程 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".app.BmobApp"
@@ -33,7 +35,7 @@
 
         <!-- BMOB需要:IM -->
         <meta-data
-            android:name="b827ce5cb3ef2041"
+            android:name="Bmob_APP_KEY"
             android:value="c1abf57050a339d5664c874c40c5bbd8" />
         
         <!-- Splash -->

@@ -14,4 +14,6 @@ public class BmobApp extends Application {
         super.onCreate();
         BmobInit.init(this);
     }
+
+
 }

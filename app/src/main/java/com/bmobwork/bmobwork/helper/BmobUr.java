@@ -13,7 +13,7 @@ import cn.bmob.v3.listener.UpdateListener;
 
 /*
  * Created by Administrator on 2021/02/003.
- * 该类用于用户操作
+ * 该类用于用户操作 (注意: User类需要根据业务进行扩展, 因为BmobUser不支持泛型)
  */
 public class BmobUr extends BmobBase {
 

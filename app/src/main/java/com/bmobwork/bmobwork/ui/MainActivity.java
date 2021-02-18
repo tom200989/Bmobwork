@@ -1,18 +1,20 @@
 package com.bmobwork.bmobwork.ui;
 
-import android.Manifest;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import com.bmobwork.bmobwork.R;
 import com.bmobwork.bmobwork.bean.User;
+import com.bmobwork.bmobwork.config.Cons;
 import com.bmobwork.bmobwork.demo.Person;
 import com.bmobwork.bmobwork.demo.Printer;
 import com.bmobwork.bmobwork.demo.Worker;
 import com.bmobwork.bmobwork.helper.BmobDB;
 import com.bmobwork.bmobwork.helper.BmobFi;
+import com.bmobwork.bmobwork.helper.BmobQu;
 import com.bmobwork.bmobwork.helper.BmobUr;
+import com.bmobwork.bmobwork.log.Legg;
 import com.bmobwork.bmobwork.utils.SDUtils;
 
 import java.util.ArrayList;
@@ -28,14 +30,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // 真机申请权限
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{//
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE,//
-                    Manifest.permission.READ_EXTERNAL_STORAGE//
-            }, 1001);
-        }
+        //
+        // // 真机申请权限
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        //     requestPermissions(new String[]{//
+        //             Manifest.permission.WRITE_EXTERNAL_STORAGE,//
+        //             Manifest.permission.READ_EXTERNAL_STORAGE//
+        //     }, 1001);
+        // }
     }
 
     /* -------------------------------------------- 对象操作 -------------------------------------------- */
@@ -44,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         Person person = new Person();
         person.setAddress("Beijing");
         person.setName("maqianli");
+        person.setAge(100);
 
         BmobDB<Person> db = new BmobDB<>();
         db.setOnSaveOneSuccessListener(objectId -> Printer.i("保存成功, ID = " + objectId));
@@ -53,17 +56,23 @@ public class MainActivity extends AppCompatActivity {
 
     // 新增(批量)
     public void saveBatch(View view) {
-        Person person = new Person();
-        person.setAddress("Shanghai");
-        person.setName("maqianli");
+
+        List<BmobObject> bmobBeans = new ArrayList<>();
+
+
+        for (int i = 0; i < 3; i++) {
+            Person person = new Person();
+            person.setAddress("Shanghai");
+            person.setName("maqianli");
+            person.setAge(100 + i);
+            bmobBeans.add(person);
+        }
 
         Worker worker = new Worker();
         worker.setSex("Man");
         worker.setWork("Programer");
-
-        List<BmobObject> bmobBeans = new ArrayList<>();
-        bmobBeans.add(person);
         bmobBeans.add(worker);
+
 
         BmobDB<Person> db = new BmobDB<>();
         db.setOnSaveBatchSuccessListener(objectIds -> Printer.i("批量保存成功"));
@@ -144,10 +153,11 @@ public class MainActivity extends AppCompatActivity {
     public void doBatch(View view) {
         // 新增
         List<BmobObject> saves = new ArrayList<>();
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 3; i++) {
             Person person = new Person();
             person.setAddress("Hubei_" + i);
             person.setName("Qiufeng_" + i);
+            person.setAge(100 + i);
             saves.add(person);
         }
 
@@ -182,9 +192,9 @@ public class MainActivity extends AppCompatActivity {
 
         // 信息
         User user = new User();
-        user.setUsername("maqianli");
+        user.setUsername("weixin");
         user.setPassword("123456");
-        user.setMobilePhoneNumber("15012889815");
+        user.setMobilePhoneNumber("13922813924");
         user.setMobilePhoneNumberVerified(true);
         user.setSalary(500000.8f);
         user.setAge(32);
@@ -334,5 +344,21 @@ public class MainActivity extends AppCompatActivity {
         fi.setOnDelete_Batch_Part_FailedListener(urls -> Printer.e("批删除部分失败"));
         fi.setOnDelete_Batch_All_FailedListener(() -> Printer.e("批删除全部失败"));
         fi.deleteBatch(url1, url2);
+    }
+
+    /* -------------------------------------------- 对象查询 -------------------------------------------- */
+
+    // 查询
+    public void query(View view) {
+        BmobQu qu = new BmobQu();
+        qu.q_great_equal("age", 102);
+        qu.setOnFindSuccessListener(result -> {
+            Legg.i(Cons.TAG, "外部得到的个数: " + result.size());
+            for (int i = 0; i < result.size(); i++) {
+                System.out.println(Cons.TAG + ": " + result.get(i).getAge());
+            }
+        });
+        qu.setOnFindFailedListener(() -> Toast.makeText(this, "查询失败", Toast.LENGTH_LONG).show());
+        qu.q_find();
     }
 }

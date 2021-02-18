@@ -8,7 +8,7 @@ import cn.bmob.v3.exception.BmobException;
 /*
  * Created by Administrator on 2021/02/002.
  */
-public class BmobBase {
+public class BmobBase{
 
     public String TAG = Cons.TAG;// 日志标记
 
