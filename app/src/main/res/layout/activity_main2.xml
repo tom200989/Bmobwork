@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:ignore="ContentDescription,Autofill,LabelFor,HardcodedText">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/et_objid"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:hint="输入对方user的objectID"
+                android:inputType="text"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rcv_message"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:background="#CCCCCC" />
+
+            <ImageView
+                android:id="@+id/iv_status"
+                android:layout_width="match_parent"
+                android:layout_height="5dp"
+                android:background="#ff0000" />
+
+            <EditText
+                android:id="@+id/et_send"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:hint="输入发送内容"
+                android:inputType="text"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp" />
+
+            <Button
+                android:id="@+id/bt_online"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
+                android:text="上线" />
+
+            <Button
+                android:id="@+id/bt_offline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
+                android:text="下线" />
+
+            <Button
+                android:id="@+id/bt_send"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
+                android:text="发送" />
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

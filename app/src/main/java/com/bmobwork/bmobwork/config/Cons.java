@@ -11,4 +11,8 @@ public class Cons {
     public final static String SECRET_KEY = "b827ce5cb3ef2041";
     public final static String MASTER_KEY = "78dc0dc75396dd1be84a3252767aaaa0";
     public final static String REST_KEY = "e8c613ad6f44d4255eb0a96c0e636e9c";
+    
+    // Lean基本配置
+    public final static String LEAN_ID = "WfeOwYtot3HYapNkClQjzj0c-gzGzoHsz";
+    public final static String LEAN_KEY = "kxVdezAxd3KSE9N7Y0KpIjcT";
 }

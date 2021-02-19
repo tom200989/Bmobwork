@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.bmobwork.bmobwork">
-
     <!-- BMOB需要 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -10,14 +9,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <!--摄像头-->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <!--录音-->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <!--通知震动-->
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- 前台进程 -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" /> <!-- 摄像头 -->
+    <uses-permission android:name="android.permission.CAMERA" /> <!-- 录音 -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" /> <!-- 通知震动 -->
+    <uses-permission android:name="android.permission.VIBRATE" /> <!-- 前台进程 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
@@ -36,10 +31,28 @@
         <!-- BMOB需要:IM -->
         <meta-data
             android:name="Bmob_APP_KEY"
-            android:value="c1abf57050a339d5664c874c40c5bbd8" />
-        
-        <!-- Splash -->
+            android:value="c1abf57050a339d5664c874c40c5bbd8" /> <!-- Splash -->
+
+        <!-- 主测试页 -->
         <activity android:name=".ui.MainActivity">
+            <!--            <intent-filter>-->
+            <!--                <action android:name="android.intent.action.MAIN" />-->
+
+            <!--                <category android:name="android.intent.category.LAUNCHER" />-->
+            <!--            </intent-filter>-->
+        </activity>
+
+        <!-- IM 页面:bmob -->
+        <activity android:name=".ui.MainActivity2">
+            <!--            <intent-filter>-->
+            <!--                <action android:name="android.intent.action.MAIN" />-->
+
+            <!--                <category android:name="android.intent.category.LAUNCHER" />-->
+            <!--            </intent-filter>-->
+        </activity>
+
+        <!-- IM 页面:leancloud -->
+        <activity android:name=".ui.MainActivity3">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -51,11 +64,10 @@
         <provider
             android:name="cn.bmob.v3.util.BmobContentProvider"
             android:authorities="com.bmobwork.bmobwork.BmobContentProvider"
-            android:exported="false">
-        </provider>
+            android:exported="false" />
 
         <!-- BMOB需要: IM -->
-        <receiver android:name="cn.bmob.newim.core.ConnectChangeReceiver" >
+        <receiver android:name="cn.bmob.newim.core.ConnectChangeReceiver">
             <intent-filter>
                 <action android:name="cn.bmob.action.RECONNECT" />
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
@@ -63,6 +75,7 @@
                 <action android:name="android.intent.action.USER_PRESENT" />
             </intent-filter>
         </receiver>
+
         <service
             android:name="cn.bmob.newim.core.service.BmobIMService"
             android:process=":bmobcore" />
@@ -71,6 +84,16 @@
             android:process=":bmobcore" />
         <service android:name="cn.bmob.newim.core.service.ReConnectService" />
         <service android:name="cn.bmob.newim.core.service.HeartBeatService" />
+
+        <!-- Lean需要: IM -->
+        <service android:name="cn.leancloud.push.PushService" />
+        <receiver android:name="cn.leancloud.push.AVBroadcastReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

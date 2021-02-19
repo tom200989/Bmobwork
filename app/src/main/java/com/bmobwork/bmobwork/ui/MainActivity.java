@@ -361,4 +361,14 @@ public class MainActivity extends AppCompatActivity {
         qu.setOnFindFailedListener(() -> Toast.makeText(this, "查询失败", Toast.LENGTH_LONG).show());
         qu.q_find();
     }
+
+    // 统计
+    public void count(View view) {
+        BmobQu qu = new BmobQu();
+        qu.q_great_equal("age", 102);
+        qu.setOnCountSuccessListener(count -> Legg.i(Cons.TAG, "统计数量为 = "+count));
+        qu.setOnCountFailedListener(() -> Legg.e(Cons.TAG, "统计失败"));
+        qu.q_count(Person.class);
+        
+    }
 }

@@ -30,6 +30,7 @@ import cn.bmob.v3.exception.BmobException;
 
 /*
  * Created by Administrator on 2021/2/16.
+ * 该类为即时通讯
  * // TODO: 2021/2/16 该类需要测试
  */
 public class BmobMI extends BmobBase {
@@ -155,7 +156,8 @@ public class BmobMI extends BmobBase {
                      *
                      * @conv: 为首次创建会话时的会话对象
                      */
-                    StartConversationSuccessNext(bmobIMConversation);
+                    convManager = obtainConvManager(bmobIMConversation);
+                    StartConversationSuccessNext(convManager);
                 } else {
                     StartConversationFailedNext();
                     BmobError("BmobMI:startTempConversation()-> 创建会话失败", e);
@@ -175,7 +177,8 @@ public class BmobMI extends BmobBase {
             public void done(BmobIMConversation bmobIMConversation, BmobException e) {
                 if (e == null) {
                     printInfo("BmobMI:startConversation()-> 创建会话成功");
-                    StartConversationSuccessNext(bmobIMConversation);
+                    convManager = obtainConvManager(bmobIMConversation);
+                    StartConversationSuccessNext(convManager);
                 } else {
                     StartConversationFailedNext();
                     BmobError("BmobMI:startConversation()-> 创建会话失败", e);

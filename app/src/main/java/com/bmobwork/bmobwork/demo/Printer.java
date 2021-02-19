@@ -27,4 +27,22 @@ public class Printer {
     public static void e(String msg) {
         Legg.e(TAG, Cons.TAG + " --> " + msg);
     }
+
+    /**
+     * 信息打印
+     *
+     * @param msg 内容
+     */
+    public static void w(String msg) {
+        Legg.w(TAG, Cons.TAG + " --> " + msg);
+    }
+
+    /**
+     * 信息打印
+     *
+     * @param msg 内容
+     */
+    public static void v(String msg) {
+        Legg.v(TAG, Cons.TAG + " --> " + msg);
+    }
 }
