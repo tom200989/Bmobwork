@@ -1,5 +1,6 @@
 package com.bmobwork.bmobwork.helper;
 
+import android.os.Handler;
 import android.text.TextUtils;
 
 import com.bmobwork.bmobwork.demo.Printer;
@@ -11,6 +12,7 @@ import cn.leancloud.im.v2.AVIMClient;
 import cn.leancloud.im.v2.AVIMClientEventHandler;
 import cn.leancloud.im.v2.AVIMConversation;
 import cn.leancloud.im.v2.AVIMConversationEventHandler;
+import cn.leancloud.im.v2.AVIMConversationsQuery;
 import cn.leancloud.im.v2.AVIMException;
 import cn.leancloud.im.v2.AVIMMessage;
 import cn.leancloud.im.v2.AVIMMessageHandler;
@@ -18,6 +20,8 @@ import cn.leancloud.im.v2.AVIMMessageManager;
 import cn.leancloud.im.v2.callback.AVIMClientCallback;
 import cn.leancloud.im.v2.callback.AVIMConversationCallback;
 import cn.leancloud.im.v2.callback.AVIMConversationCreatedCallback;
+import cn.leancloud.im.v2.callback.AVIMConversationQueryCallback;
+import cn.leancloud.im.v2.callback.AVIMMessagesQueryCallback;
 import cn.leancloud.im.v2.messages.AVIMTextMessage;
 
 /*
@@ -32,6 +36,7 @@ public class LeanIM extends BmobBase {
     private AVIMConversation conversation;// 会话
 
     private int RETRY = 5;// 重试次数
+    private int QUERY_LIMIT = 99;// 一次查询的限制条数
     private int client_count = 0;// 上线计数器 (用于失败时尝试)
     private int conversation_count = 0;// 开启会话计数器 (用于失败时尝试)
     private int send_count = 0;// 发送计数器 (用于失败时尝试)
@@ -67,7 +72,6 @@ public class LeanIM extends BmobBase {
         AVIMClient.setClientEventHandler(new ClientHandler());
     }
 
-
     /**
      * 上线
      *
@@ -86,7 +90,8 @@ public class LeanIM extends BmobBase {
                 } else if (client_count < RETRY) {
                     client_count++;
                     Printer.w("正在重试第 " + client_count + " 次上线");
-                    online(localUser);
+                    new Handler().postDelayed(() -> online(localUser), 1000);
+
                 } else {
                     client_count = 0;// 复位
                     OnlineFailedNext();
@@ -125,16 +130,14 @@ public class LeanIM extends BmobBase {
                             conversation_count = 0;
                             LeanIM.this.conversation = conversation;
                             CreatedConversationSuccessNext();
+                        } else if (conversation_count < RETRY) {
+                            conversation_count++;
+                            Printer.w("正在重试第 " + conversation_count + " 次创建");
+                            new Handler().postDelayed(() -> createdConversation(targetUser), 1000);
                         } else {
-                            if (conversation_count < RETRY) {
-                                conversation_count++;
-                                Printer.w("正在重试第 " + conversation_count + " 次创建");
-                                createdConversation(targetUser);
-                            } else {
-                                conversation_count = 0;
-                                CreatedConversationFailedNext();
-                                BmobError("创建会话失败", e);
-                            }
+                            conversation_count = 0;
+                            CreatedConversationFailedNext();
+                            BmobError("创建会话失败", e);
                         }
                     }
                 });
@@ -156,7 +159,7 @@ public class LeanIM extends BmobBase {
                         if (offline_count < 5) {
                             offline_count++;
                             Printer.w("正在重试第 " + offline_count + " 次下线");
-                            offline();
+                            new Handler().postDelayed(() -> offline(), 1000);
                         } else {
                             offline_count = 0;
                             OfflineFailedNext();
@@ -202,7 +205,7 @@ public class LeanIM extends BmobBase {
                 } else if (send_count < 5) {
                     send_count++;
                     Printer.w("正在重试第 " + send_count + " 次发送");
-                    sendText(content);
+                    new Handler().postDelayed(() -> sendText(content), 1000);
                 } else {
                     send_count = 0;
                     SendFailedNext();
@@ -211,6 +214,59 @@ public class LeanIM extends BmobBase {
             }
         });
     }
+
+    /**
+     * 查询指定会话 (根据会话ID)
+     *
+     * @param objectId 会话ID
+     * @apiNote 业务点击某个会话时调用该查询
+     */
+    public void queryConversation(String objectId) {
+        AVIMConversationsQuery query = localClient.getConversationsQuery();
+        query.whereEqualTo("objectId", objectId);
+        query.findInBackground(new AVIMConversationQueryCallback() {
+            @Override
+            public void done(List<AVIMConversation> convs, AVIMException e) {
+                if (e == null) {
+                    if (convs != null && !convs.isEmpty()) {
+                        AVIMConversation targetConv = convs.get(0);
+                        Printer.i("查询指定会话成功, 会话ID = " + targetConv.getConversationId());
+                        QueryConversationSuccessNext(targetConv);
+                    } else {
+                        Printer.w("查询指定会话完毕, 没有符合条件的会话");
+                        NoMatchConversationNext();
+                    }
+                } else {
+                    QueryConversationFailedNext();
+                    BmobError("查询失败", e);
+                }
+            }
+        });
+    }
+
+    /**
+     * 查询消息 (根据指定会话)
+     *
+     * @param conversation 指定会话
+     * @apiNote 进入具体的聊天界面后调用该查询
+     */
+    public void queryMessage(AVIMConversation conversation) {
+        conversation.queryMessages(QUERY_LIMIT, new AVIMMessagesQueryCallback() {
+            @Override
+            public void done(List<AVIMMessage> messages, AVIMException e) {
+                if (e == null) {
+                    // 成功获取最新 n 条消息记录
+                    Printer.i("查询消息成功, 消息条数 = " + messages.size());
+                    QueryMessageSuccessNext(messages);
+                } else {
+                    QueryMessageFailedNext();
+                    BmobError("查询消息失败", e);
+                }
+            }
+        });
+    }
+
+    /* -------------------------------------------- handler -------------------------------------------- */
 
     /**
      * 会话处理器
@@ -268,8 +324,9 @@ public class LeanIM extends BmobBase {
             if (message instanceof AVIMTextMessage) {
                 // 接收消息 - Jerry，起床了
                 Printer.i(((AVIMTextMessage) message).getText());
-                // TODO: 2021/2/19  回调
             }
+            // 回调
+            ReceiverMessageNext(message);
         }
     }
 
@@ -295,6 +352,109 @@ public class LeanIM extends BmobBase {
     }
 
     /* -------------------------------------------- impl -------------------------------------------- */
+
+    // ---------------- 监听器 [ReceiverMessage] ----------------
+    private static OnReceiverMessageListener onReceiverMessageListeners;
+
+    public static interface OnReceiverMessageListener {
+        void ReceiverMessage(AVIMMessage message);
+    }
+
+    public static void setOnReceiverMessageListener(OnReceiverMessageListener onReceiverMessageListener) {
+        onReceiverMessageListeners = onReceiverMessageListener;
+    }
+
+    private static void ReceiverMessageNext(AVIMMessage message) {
+        if (onReceiverMessageListeners != null) {
+            onReceiverMessageListeners.ReceiverMessage(message);
+        }
+    }
+
+    // ---------------- 监听器 [QueryMessageSuccess] ----------------
+    private OnQueryMessageSuccessListener onQueryMessageSuccessListener;
+
+    public interface OnQueryMessageSuccessListener {
+        void QueryMessageSuccess(List<AVIMMessage> messages);
+    }
+
+    public void setOnQueryMessageSuccessListener(OnQueryMessageSuccessListener onQueryMessageSuccessListener) {
+        this.onQueryMessageSuccessListener = onQueryMessageSuccessListener;
+    }
+
+    private void QueryMessageSuccessNext(List<AVIMMessage> messages) {
+        if (onQueryMessageSuccessListener != null) {
+            onQueryMessageSuccessListener.QueryMessageSuccess(messages);
+        }
+    }
+
+
+    // ---------------- 监听器 [QueryMessageFailed] ----------------
+    private OnQueryMessageFailedListener onQueryMessageFailedListener;
+
+    public interface OnQueryMessageFailedListener {
+        void QueryMessageFailed();
+    }
+
+    public void setOnQueryMessageFailedListener(OnQueryMessageFailedListener onQueryMessageFailedListener) {
+        this.onQueryMessageFailedListener = onQueryMessageFailedListener;
+    }
+
+    private void QueryMessageFailedNext() {
+        if (onQueryMessageFailedListener != null) {
+            onQueryMessageFailedListener.QueryMessageFailed();
+        }
+    }
+
+    // ---------------- 监听器 [QueryConversationSuccess] ----------------
+    private OnQueryConversationSuccessListener onQueryConversationSuccessListener;
+
+    public interface OnQueryConversationSuccessListener {
+        void QueryConversationSuccess(AVIMConversation conversation);
+    }
+
+    public void setOnQueryConversationSuccessListener(OnQueryConversationSuccessListener onQueryConversationSuccessListener) {
+        this.onQueryConversationSuccessListener = onQueryConversationSuccessListener;
+    }
+
+    private void QueryConversationSuccessNext(AVIMConversation conversation) {
+        if (onQueryConversationSuccessListener != null) {
+            onQueryConversationSuccessListener.QueryConversationSuccess(conversation);
+        }
+    }
+
+    // ---------------- 监听器 [QueryConversationFailed] ----------------
+    private OnQueryConversationFailedListener onQueryConversationFailedListener;
+
+    public interface OnQueryConversationFailedListener {
+        void QueryConversationFailed();
+    }
+
+    public void setOnQueryConversationFailedListener(OnQueryConversationFailedListener onQueryConversationFailedListener) {
+        this.onQueryConversationFailedListener = onQueryConversationFailedListener;
+    }
+
+    private void QueryConversationFailedNext() {
+        if (onQueryConversationFailedListener != null) {
+            onQueryConversationFailedListener.QueryConversationFailed();
+        }
+    }
+
+    // ---------------- 监听器 [NoMatchConversation] ----------------
+    private OnNoMatchConversationListener onNoMatchConversationListener;
+
+    public interface OnNoMatchConversationListener {
+        void NoMatchConversation();
+    }
+
+    public void setOnNoMatchConversationListener(OnNoMatchConversationListener onNoMatchConversationListener) {
+        this.onNoMatchConversationListener = onNoMatchConversationListener;
+    }
+
+    private void NoMatchConversationNext() {
+        if (onNoMatchConversationListener != null) {
+            onNoMatchConversationListener.NoMatchConversation();
+        }
+    }
 
     // ---------------- 监听器 [OnlineSuccess] ----------------
     private OnOnlineSuccessListener onOnlineSuccessListener;

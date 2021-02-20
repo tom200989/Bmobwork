@@ -12,7 +12,7 @@ import android.widget.Toast;
 import com.bmobwork.bmobwork.R;
 import com.bmobwork.bmobwork.demo.MessageAdapter;
 import com.bmobwork.bmobwork.demo.Messagebean;
-import com.bmobwork.bmobwork.helper.BmobUr;
+import com.bmobwork.bmobwork.demo.Printer;
 import com.bmobwork.bmobwork.helper.LeanIM;
 
 import java.util.ArrayList;
@@ -20,6 +20,8 @@ import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import cn.leancloud.im.v2.AVIMMessage;
+import cn.leancloud.im.v2.messages.AVIMTextMessage;
 
 public class MainActivity3 extends AppCompatActivity {
 
@@ -34,12 +36,13 @@ public class MainActivity3 extends AppCompatActivity {
 
     private List<Messagebean> messages = new ArrayList<>();
 
-    private int flag = 0;
+    private int flag = 1;
     private String localUser = flag == 0 ? "maqianli" : "weixin";
     private String targetUser = flag == 0 ? "weixin" : "maqianli";
 
-    private BmobUr ur;
     private LeanIM leanIM;
+    private MessageAdapter adapter;
+    private LinearLayoutManager lm;
 
 
     @Override
@@ -55,62 +58,109 @@ public class MainActivity3 extends AppCompatActivity {
         bt_offline = findViewById(R.id.bt_offline);// 下线按钮
         bt_send = findViewById(R.id.bt_send);// 发送按钮
 
-        rcv_message.setLayoutManager(new LinearLayoutManager(this));
-        rcv_message.setAdapter(new MessageAdapter(this, messages));
+        lm = new LinearLayoutManager(this);
+        lm.setStackFromEnd(true);
+        adapter = new MessageAdapter(this, messages);
+        rcv_message.setLayoutManager(lm);
+        rcv_message.setAdapter(adapter);
 
         bt_online.setOnClickListener(v -> click_online());
         bt_create_conv.setOnClickListener(v -> click_created_conv());
         bt_offline.setOnClickListener(v -> click_offline());
         bt_send.setOnClickListener(v -> click_send());
 
+        // 1.初始化IM
+        leanIM = LeanIM.getInstance();
+        // 2.接收监听
+        LeanIM.setOnReceiverMessageListener(avimMessage -> {
+            Messagebean messagebean = new Messagebean();
+            messagebean.setReceiver(avimMessage.getFrom().equals(targetUser));
+            if (avimMessage instanceof AVIMTextMessage) {
+                messagebean.setContent(((AVIMTextMessage) avimMessage).getText());
+            }
+            messages.add(messagebean);
+            // 主线程
+            runOnUiThread(() -> {
+                // 刷新UI
+                adapter.notifys(messages);
+                // 滑动到底部
+                lm.scrollToPositionWithOffset(adapter.getItemCount() - 1, Integer.MIN_VALUE);
+            });
+        });
+        // 3.上线
+        leanIM.setOnOnlineSuccessListener(() -> {
+            iv_status.setBackground(new ColorDrawable(Color.GREEN));
+            // 4.查询会话
+            leanIM.setOnQueryConversationSuccessListener(conversation -> {
+                // 5.查询消息
+                leanIM.setOnQueryMessageSuccessListener(avimMessages -> {
+                    Printer.v("avimMessages = " + avimMessages.size());
+                    // 先清空
+                    messages.clear();
+                    // 转换成业务bean
+                    for (AVIMMessage avimMessage : avimMessages) {
+                        Messagebean messagebean = new Messagebean();
+                        messagebean.setReceiver(avimMessage.getFrom().equals(targetUser));
+                        if (avimMessage instanceof AVIMTextMessage) {
+                            messagebean.setContent(((AVIMTextMessage) avimMessage).getText());
+                        }
+                        messages.add(messagebean);
+                    }
+                    // 主线程
+                    runOnUiThread(() -> {
+                        // 刷新UI
+                        adapter.notifys(messages);
+                        // 滑动到底部
+                        lm.scrollToPositionWithOffset(adapter.getItemCount() - 1, Integer.MIN_VALUE);
+                    });
+
+                });
+                leanIM.queryMessage(conversation);
+            });
+            leanIM.queryConversation("602fd33495211d5b7778e809");
+        });
+        leanIM.online(localUser);
     }
 
 
     // 发送
     private void click_send() {
-        if (leanIM != null) {
-            String content = et_send.getText().toString().trim();
-            if (TextUtils.isEmpty(content)) {
-                content = targetUser + " 起床啦!";
-            }
-            leanIM.sendText(content);
+        String content = et_send.getText().toString().trim();
+        if (TextUtils.isEmpty(content)) {
+            content = targetUser + " 起床啦!";
         }
+
+        String text = content;
+        leanIM.setOnSendSuccessListener(() -> {
+            Messagebean messagebean = new Messagebean();
+            messagebean.setReceiver(false);
+            messagebean.setContent(text);
+            messages.add(messagebean);
+            runOnUiThread(() -> {
+                adapter.notifys(messages);
+                lm.scrollToPositionWithOffset(adapter.getItemCount() - 1, Integer.MIN_VALUE);
+            });
+        });
+
+        leanIM.sendText(content);
     }
 
     // 上线
     private void click_online() {
-        // User user = new User();
-        // user.setUsername(username);
-        // user.setPassword("123456");
-        //
-        // ur = new BmobUr();
-        // ur.setOnLoginSuccessListener(currentUser -> {
-        //     toast("登录成功");
-        //     LeanIM leanIM = LeanIM.getInstance();
-        //     leanIM.online(localUser, targetUser);
-        // });
-        // ur.setOnLoginFailedListener(() -> toast("登录失败"));
-        // ur.login(user);
-
-        leanIM = LeanIM.getInstance();
         leanIM.setOnOnlineSuccessListener(() -> iv_status.setBackground(new ColorDrawable(Color.GREEN)));
         leanIM.online(localUser);
     }
 
     // 开启会话
     private void click_created_conv() {
-        if (leanIM != null) {
-            leanIM.setOnCreatedConversationSuccessListener(() -> iv_status.setBackground(new ColorDrawable(Color.YELLOW)));
-            leanIM.createdConversation(targetUser);
-        }
+        leanIM.setOnCreatedConversationSuccessListener(() -> iv_status.setBackground(new ColorDrawable(Color.YELLOW)));
+        leanIM.createdConversation(targetUser);
     }
 
     // 下线
     private void click_offline() {
-        if (leanIM != null) {
-            leanIM.setOnOfflineSuccessListener(() -> iv_status.setBackground(new ColorDrawable(Color.RED)));
-            leanIM.offline();
-        }
+        leanIM.setOnOfflineSuccessListener(() -> iv_status.setBackground(new ColorDrawable(Color.RED)));
+        leanIM.offline();
     }
 
 
