@@ -172,6 +172,28 @@ public class LeanIM extends BmobBase {
     }
 
     /**
+     * 设置全部消息已读
+     */
+    public void setHadRead() {
+        if (conversation != null) {
+            conversation.read();
+        }
+    }
+
+    /**
+     * 获取未读消息数
+     *
+     * @return 如返回-1, 表示网络有问题
+     */
+    public int getUnreadCount() {
+        int unread = -1;
+        if (conversation != null) {
+            unread = conversation.getUnreadMessagesCount();
+        }
+        return unread;
+    }
+
+    /**
      * 发送文本
      *
      * @param content 文本
@@ -266,6 +288,28 @@ public class LeanIM extends BmobBase {
         });
     }
 
+    /**
+     * 翻页查询
+     *
+     * @param conversation           会话
+     * @param last_message_id        最近一条消息ID
+     * @param last_message_timeStamp 最近一条消息时间戳
+     */
+    public void queryMessage(AVIMConversation conversation, String last_message_id, long last_message_timeStamp) {
+        conversation.queryMessages(last_message_id, last_message_timeStamp, QUERY_LIMIT, new AVIMMessagesQueryCallback() {
+            @Override
+            public void done(List<AVIMMessage> messages, AVIMException e) {
+                if (e == null) {
+                    Printer.i("查询消息成功, 消息条数 = " + messages.size());
+                    QueryMessageSuccessNext(messages);
+                } else {
+                    QueryMessageFailedNext();
+                    BmobError("查询消息失败", e);
+                }
+            }
+        });
+    }
+
     /* -------------------------------------------- handler -------------------------------------------- */
 
     /**
@@ -325,6 +369,7 @@ public class LeanIM extends BmobBase {
                 // 接收消息 - Jerry，起床了
                 Printer.i(((AVIMTextMessage) message).getText());
             }
+            // TODO: 2021/2/20  扩展消息类型
             // 回调
             ReceiverMessageNext(message);
         }
@@ -338,20 +383,74 @@ public class LeanIM extends BmobBase {
         @Override
         public void onConnectionPaused(AVIMClient client) {
             Printer.e("网络被切断");
+            ConnectPauseNext();
         }
 
         @Override
         public void onConnectionResume(AVIMClient client) {
-            Printer.v("网络重连中....");
+            Printer.v("网络连接中");
+            ConnectResumeNext();
         }
 
         @Override
         public void onClientOffline(AVIMClient client, int code) {
             Printer.e("用户离线");
+            ClientOfflineNext();
         }
     }
 
     /* -------------------------------------------- impl -------------------------------------------- */
+
+    // ---------------- 监听器 [ConnectPause] ----------------
+    private static OnConnectPauseListener onConnectPauseListeners;
+
+    public static interface OnConnectPauseListener {
+        void ConnectPause();
+    }
+
+    public static void setOnConnectPauseListener(OnConnectPauseListener onConnectPauseListener) {
+        onConnectPauseListeners = onConnectPauseListener;
+    }
+
+    private static void ConnectPauseNext() {
+        if (onConnectPauseListeners != null) {
+            onConnectPauseListeners.ConnectPause();
+        }
+    }
+
+    // ---------------- 监听器 [ConnectResume] ----------------
+    private static OnConnectResumeListener onConnectResumeListeners;
+
+    public static interface OnConnectResumeListener {
+        void ConnectResume();
+    }
+
+    public static void setOnConnectResumeListener(OnConnectResumeListener onConnectResumeListener) {
+        onConnectResumeListeners = onConnectResumeListener;
+    }
+
+    private static void ConnectResumeNext() {
+        if (onConnectResumeListeners != null) {
+            onConnectResumeListeners.ConnectResume();
+        }
+    }
+
+    // ---------------- 监听器 [ClientOffline] ----------------
+    private static OnClientOfflineListener onClientOfflineListeners;
+
+    public static interface OnClientOfflineListener {
+        void ClientOffline();
+    }
+
+    public static void setOnClientOfflineListener(OnClientOfflineListener onClientOfflineListener) {
+        onClientOfflineListeners = onClientOfflineListener;
+    }
+
+    private static void ClientOfflineNext() {
+        if (onClientOfflineListeners != null) {
+            onClientOfflineListeners.ClientOffline();
+        }
+    }
 
     // ---------------- 监听器 [ReceiverMessage] ----------------
     private static OnReceiverMessageListener onReceiverMessageListeners;
