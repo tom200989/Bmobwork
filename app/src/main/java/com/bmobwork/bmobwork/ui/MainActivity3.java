@@ -21,7 +21,9 @@ import java.util.List;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import cn.leancloud.im.v2.AVIMMessage;
+import cn.leancloud.im.v2.messages.AVIMLocationMessage;
 import cn.leancloud.im.v2.messages.AVIMTextMessage;
+import cn.leancloud.types.AVGeoPoint;
 
 public class MainActivity3 extends AppCompatActivity {
 
@@ -77,6 +79,13 @@ public class MainActivity3 extends AppCompatActivity {
             messagebean.setReceiver(avimMessage.getFrom().equals(targetUser));
             if (avimMessage instanceof AVIMTextMessage) {
                 messagebean.setContent(((AVIMTextMessage) avimMessage).getText());
+            } else if (avimMessage instanceof AVIMLocationMessage) {
+                AVIMLocationMessage locationMessage = (AVIMLocationMessage) avimMessage;
+                AVGeoPoint location = locationMessage.getLocation();
+                double lat = location.getLatitude();
+                double lng = location.getLongitude();
+                String des = locationMessage.getText();
+                messagebean.setContent(des + "(" + lat + "," + lng + ")");
             }
             messages.add(messagebean);
             // 主线程
@@ -103,6 +112,13 @@ public class MainActivity3 extends AppCompatActivity {
                         messagebean.setReceiver(avimMessage.getFrom().equals(targetUser));
                         if (avimMessage instanceof AVIMTextMessage) {
                             messagebean.setContent(((AVIMTextMessage) avimMessage).getText());
+                        } else if (avimMessage instanceof AVIMLocationMessage) {
+                            AVIMLocationMessage locationMessage = (AVIMLocationMessage) avimMessage;
+                            AVGeoPoint location = locationMessage.getLocation();
+                            double lat = location.getLatitude();
+                            double lng = location.getLongitude();
+                            String des = locationMessage.getText();
+                            messagebean.setContent(des + "(" + lat + "," + lng + ")");
                         }
                         messages.add(messagebean);
                     }
@@ -125,6 +141,11 @@ public class MainActivity3 extends AppCompatActivity {
 
     // 发送
     private void click_send() {
+        // sendText();// 发送文本
+        sendLocation();// 发送定位
+    }
+
+    private void sendText() {
         String content = et_send.getText().toString().trim();
         if (TextUtils.isEmpty(content)) {
             content = targetUser + " 起床啦!";
@@ -143,6 +164,24 @@ public class MainActivity3 extends AppCompatActivity {
         });
 
         leanIM.sendText(content);
+    }
+
+    private void sendLocation() {
+        double lat = 30.00009999;
+        double lng = 63.00099999;
+        String des = "蛋糕店的位置";
+        leanIM.setOnSendSuccessListener(() -> {
+            Messagebean messagebean = new Messagebean();
+            messagebean.setReceiver(false);
+            messagebean.setContent(des + "(" + lat + "," + lng + ")");
+            messages.add(messagebean);
+            runOnUiThread(() -> {
+                adapter.notifys(messages);
+                lm.scrollToPositionWithOffset(adapter.getItemCount() - 1, Integer.MIN_VALUE);
+            });
+        });
+
+        leanIM.sendLocation(lat, lng, des);
     }
 
     // 上线

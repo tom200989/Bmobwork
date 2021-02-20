@@ -8,6 +8,7 @@ import com.bmobwork.bmobwork.demo.Printer;
 import java.util.Collections;
 import java.util.List;
 
+import cn.leancloud.AVFile;
 import cn.leancloud.im.v2.AVIMClient;
 import cn.leancloud.im.v2.AVIMClientEventHandler;
 import cn.leancloud.im.v2.AVIMConversation;
@@ -17,12 +18,18 @@ import cn.leancloud.im.v2.AVIMException;
 import cn.leancloud.im.v2.AVIMMessage;
 import cn.leancloud.im.v2.AVIMMessageHandler;
 import cn.leancloud.im.v2.AVIMMessageManager;
+import cn.leancloud.im.v2.annotation.AVIMMessageType;
 import cn.leancloud.im.v2.callback.AVIMClientCallback;
 import cn.leancloud.im.v2.callback.AVIMConversationCallback;
 import cn.leancloud.im.v2.callback.AVIMConversationCreatedCallback;
 import cn.leancloud.im.v2.callback.AVIMConversationQueryCallback;
 import cn.leancloud.im.v2.callback.AVIMMessagesQueryCallback;
+import cn.leancloud.im.v2.messages.AVIMAudioMessage;
+import cn.leancloud.im.v2.messages.AVIMFileMessage;
+import cn.leancloud.im.v2.messages.AVIMImageMessage;
+import cn.leancloud.im.v2.messages.AVIMLocationMessage;
 import cn.leancloud.im.v2.messages.AVIMTextMessage;
+import cn.leancloud.types.AVGeoPoint;
 
 /*
  * Created by Administrator on 2021/2/19.
@@ -199,21 +206,9 @@ public class LeanIM extends BmobBase {
      * @param content 文本
      */
     public void sendText(String content) {
-        // 非空判断
-        if (localClient == null) {
-            Printer.e("本地尚未上线, 目前正在执行上线操作, 请下一步开启对方会话");
-            online(localUser);
-            return;
-        }
-        if (conversation == null) {
-            Printer.e("会话尚未开启, 请先调用 createdConversation() 向对方开启会话");
-            if (!TextUtils.isEmpty(targetUser)) {// 对方ID必需有业务层传入 - 如果没有传入, 是不知道要和谁进性通讯的
-                createdConversation(targetUser);
-            } else {
-                Printer.e("targetUser 没有被业务指定, 请业务层调用 createdConversation() 传入一个对方ID");
-            }
-            return;
-        }
+        // 通讯条件判断
+        if (!checkCondition()) return;
+        // 封装
         AVIMTextMessage msg = new AVIMTextMessage();
         msg.setText(content);
         // 发送消息
@@ -224,7 +219,7 @@ public class LeanIM extends BmobBase {
                     Printer.i("发送成功");
                     send_count = 0;
                     SendSuccessNext();
-                } else if (send_count < 5) {
+                } else if (send_count < RETRY) {
                     send_count++;
                     Printer.w("正在重试第 " + send_count + " 次发送");
                     new Handler().postDelayed(() -> sendText(content), 1000);
@@ -235,6 +230,118 @@ public class LeanIM extends BmobBase {
                 }
             }
         });
+    }
+
+    /**
+     * 发送图像\音频\文件
+     *
+     * @param messageType 消息类型(图像\音频\文件)
+     * @param path        本地路径
+     * @param des         消息描述
+     */
+    public void send_img_audio_file(AVIMMessageType messageType, String path, String des) {
+        try {
+            // 路径、名字
+            String name = path.substring(path.lastIndexOf("/") + 1);
+            AVFile file = AVFile.withAbsoluteLocalPath(name, path);
+            // 创建多媒体消息
+            AVIMMessage message;
+            if (messageType.type() == AVIMMessageType.IMAGE_MESSAGE_TYPE) {
+                AVIMImageMessage imageMessage = new AVIMImageMessage(file);
+                imageMessage.setText(des);
+                message = imageMessage;
+            } else if (messageType.type() == AVIMMessageType.AUDIO_MESSAGE_TYPE) {
+                AVIMAudioMessage audioMessage = new AVIMAudioMessage(file);
+                audioMessage.setText(des);
+                message = audioMessage;
+            } else if (messageType.type() == AVIMMessageType.FILE_MESSAGE_TYPE) {
+                AVIMFileMessage fileMessage = new AVIMFileMessage(file);
+                fileMessage.setText(des);
+                message = fileMessage;
+            } else {
+                Printer.e("无法识别的消息类型, 请留意");
+                AVIMTextMessage textMessage = new AVIMTextMessage();
+                textMessage.setText(des);
+                message = textMessage;
+            }
+            // 发送
+            conversation.sendMessage(message, new AVIMConversationCallback() {
+                @Override
+                public void done(AVIMException e) {
+                    if (e == null) {
+                        Printer.i("发送成功");
+                        send_count = 0;
+                        SendSuccessNext();
+                    } else if (send_count < RETRY) {
+                        send_count++;
+                        Printer.w("正在重试第 " + send_count + " 次发送");
+                        new Handler().postDelayed(() -> send_img_audio_file(messageType, path, des), 1000);
+                    } else {
+                        send_count = 0;
+                        SendFailedNext();
+                        BmobError("发送失败", e);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            SendFailedNext();
+            BmobError("发送失败", e);
+        }
+    }
+
+    /**
+     * 发送定位
+     *
+     * @param lat 经度
+     * @param lng 纬度
+     * @param des 描述
+     */
+    public void sendLocation(double lat, double lng, String des) {
+        AVIMLocationMessage message = new AVIMLocationMessage();
+        message.setLocation(new AVGeoPoint(lat, lng));
+        message.setText(des);
+        conversation.sendMessage(message, new AVIMConversationCallback() {
+            @Override
+            public void done(AVIMException e) {
+                if (e == null) {
+                    Printer.i("发送成功");
+                    send_count = 0;
+                    SendSuccessNext();
+                } else if (send_count < RETRY) {
+                    send_count++;
+                    Printer.w("正在重试第 " + send_count + " 次发送");
+                    new Handler().postDelayed(() -> sendLocation(lat, lng, des), 1000);
+                } else {
+                    send_count = 0;
+                    SendFailedNext();
+                    BmobError("发送失败", e);
+                }
+            }
+        });
+    }
+
+    /**
+     * 检查条件
+     *
+     * @return T:符合体检
+     */
+    private boolean checkCondition() {
+        // 非空判断
+        if (localClient == null) {
+            Printer.e("本地尚未上线, 目前正在执行上线操作, 请下一步开启对方会话");
+            online(localUser);
+            return false;
+        }
+        if (conversation == null) {
+            Printer.e("会话尚未开启, 请先调用 createdConversation() 向对方开启会话");
+            if (!TextUtils.isEmpty(targetUser)) {// 对方ID必需有业务层传入 - 如果没有传入, 是不知道要和谁进性通讯的
+                createdConversation(targetUser);
+            } else {
+                Printer.e("targetUser 没有被业务指定, 请业务层调用 createdConversation() 传入一个对方ID");
+            }
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -300,11 +407,11 @@ public class LeanIM extends BmobBase {
             @Override
             public void done(List<AVIMMessage> messages, AVIMException e) {
                 if (e == null) {
-                    Printer.i("查询消息成功, 消息条数 = " + messages.size());
+                    Printer.i("翻页查询消息成功, 消息条数 = " + messages.size());
                     QueryMessageSuccessNext(messages);
                 } else {
                     QueryMessageFailedNext();
-                    BmobError("查询消息失败", e);
+                    BmobError("翻页查询消息失败", e);
                 }
             }
         });
@@ -365,13 +472,8 @@ public class LeanIM extends BmobBase {
          */
         @Override
         public void onMessage(AVIMMessage message, AVIMConversation conversation, AVIMClient client) {
-            if (message instanceof AVIMTextMessage) {
-                // 接收消息 - Jerry，起床了
-                Printer.i(((AVIMTextMessage) message).getText());
-            }
-            // TODO: 2021/2/20  扩展消息类型
-            // 回调
-            ReceiverMessageNext(message);
+            ReceiverMessageNext(message);// 回调
+            // TODO: 2021/2/20  需要做一个工具类对消息分类转换
         }
     }
 
