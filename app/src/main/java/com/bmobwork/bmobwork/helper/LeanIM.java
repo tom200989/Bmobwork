@@ -37,12 +37,12 @@ import cn.leancloud.types.AVGeoPoint;
 public class LeanIM extends BmobBase {
 
     public static LeanIM im;// 单例
-    private AVIMClient localClient;// 发送者
     private String localUser;
     private String targetUser;
+    private AVIMClient localClient;// 发送者
     private AVIMConversation conversation;// 会话
 
-    private int RETRY = 5;// 重试次数
+    private int RETRY = 10;// 重试次数
     private int QUERY_LIMIT = 99;// 一次查询的限制条数
     private int client_count = 0;// 上线计数器 (用于失败时尝试)
     private int conversation_count = 0;// 开启会话计数器 (用于失败时尝试)
@@ -345,22 +345,27 @@ public class LeanIM extends BmobBase {
     }
 
     /**
-     * 查询指定会话 (根据会话ID)
+     * 查询会话 (包含当前client角色的会话)
      *
-     * @param objectId 会话ID
-     * @apiNote 业务点击某个会话时调用该查询
+     * @apiNote 该方法用于客服功能, 即查询与自己相关的所有会话
+     * 如John是客服, John是当前的client, 那么与John相关的全部会话将被获取出来
      */
-    public void queryConversation(String objectId) {
+    public void queryConversation() {
+        // 非空判断
+        if (localClient == null) {
+            Printer.e("本地尚未上线, 目前正在执行上线操作, 请再次查询");
+            online(localUser);
+            return;
+        }
         AVIMConversationsQuery query = localClient.getConversationsQuery();
-        query.whereEqualTo("objectId", objectId);
+        query.whereContainsIn("m", Collections.singletonList(localUser));
         query.findInBackground(new AVIMConversationQueryCallback() {
             @Override
             public void done(List<AVIMConversation> convs, AVIMException e) {
                 if (e == null) {
                     if (convs != null && !convs.isEmpty()) {
-                        AVIMConversation targetConv = convs.get(0);
-                        Printer.i("查询指定会话成功, 会话ID = " + targetConv.getConversationId());
-                        QueryConversationSuccessNext(targetConv);
+                        Printer.i("查询会话成功, 会话个数为" + convs.size());
+                        QueryConversationSuccessNext(convs);
                     } else {
                         Printer.w("查询指定会话完毕, 没有符合条件的会话");
                         NoMatchConversationNext();
@@ -372,6 +377,42 @@ public class LeanIM extends BmobBase {
             }
         });
     }
+
+    /**
+     * 查询指定会话 (根据会话ID)
+     *
+     * @param objectId 会话ID
+     * @apiNote 业务点击某个会话时调用该查询
+     */
+    public void queryConversation(String objectId) {
+        // 非空判断
+        if (localClient == null) {
+            Printer.e("本地尚未上线, 目前正在执行上线操作, 请再次查询");
+            online(localUser);
+            return;
+        }
+        AVIMConversationsQuery query = localClient.getConversationsQuery();
+        query.whereEqualTo("objectId", objectId);
+        query.findInBackground(new AVIMConversationQueryCallback() {
+            @Override
+            public void done(List<AVIMConversation> convs, AVIMException e) {
+                if (e == null) {
+                    if (convs != null && !convs.isEmpty()) {
+                        AVIMConversation targetConv = convs.get(0);
+                        Printer.i("查询指定会话成功, 会话ID = " + targetConv.getConversationId());
+                        QueryConversationSuccessNext(convs);
+                    } else {
+                        Printer.w("查询指定会话完毕, 没有符合条件的会话");
+                        NoMatchConversationNext();
+                    }
+                } else {
+                    QueryConversationFailedNext();
+                    BmobError("查询失败", e);
+                }
+            }
+        });
+    }
+
 
     /**
      * 查询消息 (根据指定会话)
@@ -473,7 +514,7 @@ public class LeanIM extends BmobBase {
         @Override
         public void onMessage(AVIMMessage message, AVIMConversation conversation, AVIMClient client) {
             ReceiverMessageNext(message);// 回调
-            // TODO: 2021/2/20  需要做一个工具类对消息分类转换
+            // TOAT: 2021/2/20  需要做一个工具类对消息分类转换或者由外部拿到message后再自行决定处理
         }
     }
 
@@ -610,16 +651,16 @@ public class LeanIM extends BmobBase {
     private OnQueryConversationSuccessListener onQueryConversationSuccessListener;
 
     public interface OnQueryConversationSuccessListener {
-        void QueryConversationSuccess(AVIMConversation conversation);
+        void QueryConversationSuccess(List<AVIMConversation> conversations);
     }
 
     public void setOnQueryConversationSuccessListener(OnQueryConversationSuccessListener onQueryConversationSuccessListener) {
         this.onQueryConversationSuccessListener = onQueryConversationSuccessListener;
     }
 
-    private void QueryConversationSuccessNext(AVIMConversation conversation) {
+    private void QueryConversationSuccessNext(List<AVIMConversation> conversations) {
         if (onQueryConversationSuccessListener != null) {
-            onQueryConversationSuccessListener.QueryConversationSuccess(conversation);
+            onQueryConversationSuccessListener.QueryConversationSuccess(conversations);
         }
     }
 

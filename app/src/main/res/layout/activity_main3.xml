@@ -16,15 +16,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <EditText
-                android:id="@+id/et_objid"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:hint="输入对方user的objectID"
-                android:inputType="text"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp" />
-
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rcv_message"
                 android:layout_width="match_parent"
@@ -52,6 +43,7 @@
                 android:layout_height="wrap_content"
                 android:minHeight="60dp"
                 android:text="上线" />
+
             <Button
                 android:id="@+id/bt_created_conversation"
                 android:layout_width="match_parent"
@@ -72,6 +64,13 @@
                 android:layout_height="wrap_content"
                 android:minHeight="60dp"
                 android:text="发送" />
+
+            <Button
+                android:id="@+id/bt_get_convs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
+                android:text="获取本人会话" />
         </LinearLayout>
 
     </ScrollView>

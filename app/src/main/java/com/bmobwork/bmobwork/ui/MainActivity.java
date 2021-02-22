@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
         worker.setWork("Programer");
         bmobBeans.add(worker);
 
-
         BmobDB<Person> db = new BmobDB<>();
         db.setOnSaveBatchSuccessListener(objectIds -> Printer.i("批量保存成功"));
         db.setOnSaveBatchFailedListener(() -> Printer.e("批量保存失败"));
@@ -366,9 +365,9 @@ public class MainActivity extends AppCompatActivity {
     public void count(View view) {
         BmobQu qu = new BmobQu();
         qu.q_great_equal("age", 102);
-        qu.setOnCountSuccessListener(count -> Legg.i(Cons.TAG, "统计数量为 = "+count));
+        qu.setOnCountSuccessListener(count -> Legg.i(Cons.TAG, "统计数量为 = " + count));
         qu.setOnCountFailedListener(() -> Legg.e(Cons.TAG, "统计失败"));
         qu.q_count(Person.class);
-        
+
     }
 }

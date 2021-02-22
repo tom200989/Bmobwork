@@ -20,6 +20,8 @@ import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import cn.leancloud.im.v2.AVIMConversation;
 import cn.leancloud.im.v2.AVIMMessage;
 import cn.leancloud.im.v2.messages.AVIMLocationMessage;
 import cn.leancloud.im.v2.messages.AVIMTextMessage;
@@ -28,19 +30,20 @@ import cn.leancloud.types.AVGeoPoint;
 public class MainActivity3 extends AppCompatActivity {
 
     public EditText et_objid;
-    public androidx.recyclerview.widget.RecyclerView rcv_message;
+    public RecyclerView rcv_message;
     public ImageView iv_status;
     public EditText et_send;
     public Button bt_online;
     public Button bt_create_conv;
     public Button bt_offline;
     public Button bt_send;
+    public Button bt_get_convs;
 
     private List<Messagebean> messages = new ArrayList<>();
 
     private int flag = 1;
-    private String localUser = flag == 0 ? "maqianli" : "weixin";
-    private String targetUser = flag == 0 ? "weixin" : "maqianli";
+    private String localUser = flag == 0 ? "maqianli" : "xinmiao";
+    private String targetUser = flag == 0 ? "xinmiao" : "maqianli";
 
     private LeanIM leanIM;
     private MessageAdapter adapter;
@@ -59,6 +62,7 @@ public class MainActivity3 extends AppCompatActivity {
         bt_create_conv = findViewById(R.id.bt_created_conversation);// 开启会话按钮
         bt_offline = findViewById(R.id.bt_offline);// 下线按钮
         bt_send = findViewById(R.id.bt_send);// 发送按钮
+        bt_get_convs = findViewById(R.id.bt_get_convs);// 获取本人会话按钮
 
         lm = new LinearLayoutManager(this);
         lm.setStackFromEnd(true);
@@ -70,6 +74,7 @@ public class MainActivity3 extends AppCompatActivity {
         bt_create_conv.setOnClickListener(v -> click_created_conv());
         bt_offline.setOnClickListener(v -> click_offline());
         bt_send.setOnClickListener(v -> click_send());
+        bt_get_convs.setOnClickListener(v -> click_get_convs());
 
         // 1.初始化IM
         leanIM = LeanIM.getInstance();
@@ -100,7 +105,7 @@ public class MainActivity3 extends AppCompatActivity {
         leanIM.setOnOnlineSuccessListener(() -> {
             iv_status.setBackground(new ColorDrawable(Color.GREEN));
             // 4.查询会话
-            leanIM.setOnQueryConversationSuccessListener(conversation -> {
+            leanIM.setOnQueryConversationSuccessListener(conversations -> {
                 // 5.查询消息
                 leanIM.setOnQueryMessageSuccessListener(avimMessages -> {
                     Printer.v("avimMessages = " + avimMessages.size());
@@ -131,7 +136,7 @@ public class MainActivity3 extends AppCompatActivity {
                     });
 
                 });
-                leanIM.queryMessage(conversation);
+                leanIM.queryMessage(conversations.get(0));
             });
             leanIM.queryConversation("602fd33495211d5b7778e809");
         });
@@ -200,6 +205,17 @@ public class MainActivity3 extends AppCompatActivity {
     private void click_offline() {
         leanIM.setOnOfflineSuccessListener(() -> iv_status.setBackground(new ColorDrawable(Color.RED)));
         leanIM.offline();
+    }
+
+    // 获取本人相关的所有会话
+    private void click_get_convs() {
+        leanIM.setOnQueryConversationSuccessListener(conversations -> {
+            Printer.i("共有会话: " + conversations.size() + " 个");
+            for (AVIMConversation conversation : conversations) {
+                Printer.i("conversation ID = " + conversation.getConversationId());
+            }
+        });
+        leanIM.queryConversation();
     }
 
 

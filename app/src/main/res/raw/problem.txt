@@ -2,3 +2,5 @@
 
 1- IM包下载地址(如果远程仓库失败的话, 就手动到仓库下载)
 https://dl.bintray.com/chaozhouzhang/maven/cn/bmob/android/bmob-im/2.1.5/
+
+2- github private token : 25d258147167630cfff299e15d9379901609a0db
