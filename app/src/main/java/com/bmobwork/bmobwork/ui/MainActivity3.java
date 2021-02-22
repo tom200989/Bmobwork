@@ -21,6 +21,7 @@ import java.util.List;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import cn.leancloud.im.v2.AVIMConversation;
 import cn.leancloud.im.v2.AVIMMessage;
 import cn.leancloud.im.v2.messages.AVIMLocationMessage;
 import cn.leancloud.im.v2.messages.AVIMTextMessage;
@@ -208,14 +209,13 @@ public class MainActivity3 extends AppCompatActivity {
 
     // 获取本人相关的所有会话
     private void click_get_convs() {
-        leanIM.setHadRead();
-        // leanIM.setOnQueryConversationSuccessListener(conversations -> {
-        //     Printer.i("共有会话: " + conversations.size() + " 个");
-        //     for (AVIMConversation conversation : conversations) {
-        //         Printer.i("conversation ID = " + conversation.getConversationId());
-        //     }
-        // });
-        // leanIM.queryConversation();
+        leanIM.setOnQueryConversationSuccessListener(conversations -> {
+            Printer.i("共有会话: " + conversations.size() + " 个");
+            for (AVIMConversation conversation : conversations) {
+                Printer.i("conversation ID = " + conversation.getConversationId());
+            }
+        });
+        leanIM.queryConversation();
     }
 
 
