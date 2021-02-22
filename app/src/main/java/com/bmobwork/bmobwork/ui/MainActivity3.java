@@ -21,7 +21,6 @@ import java.util.List;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import cn.leancloud.im.v2.AVIMConversation;
 import cn.leancloud.im.v2.AVIMMessage;
 import cn.leancloud.im.v2.messages.AVIMLocationMessage;
 import cn.leancloud.im.v2.messages.AVIMTextMessage;
@@ -138,7 +137,7 @@ public class MainActivity3 extends AppCompatActivity {
                 });
                 leanIM.queryMessage(conversations.get(0));
             });
-            leanIM.queryConversation("602fd33495211d5b7778e809");
+            leanIM.queryConversation("60336c2195211d5b77c021d2");
         });
         leanIM.online(localUser);
     }
@@ -146,8 +145,8 @@ public class MainActivity3 extends AppCompatActivity {
 
     // 发送
     private void click_send() {
-        // sendText();// 发送文本
-        sendLocation();// 发送定位
+        sendText();// 发送文本
+        // sendLocation();// 发送定位
     }
 
     private void sendText() {
@@ -209,13 +208,14 @@ public class MainActivity3 extends AppCompatActivity {
 
     // 获取本人相关的所有会话
     private void click_get_convs() {
-        leanIM.setOnQueryConversationSuccessListener(conversations -> {
-            Printer.i("共有会话: " + conversations.size() + " 个");
-            for (AVIMConversation conversation : conversations) {
-                Printer.i("conversation ID = " + conversation.getConversationId());
-            }
-        });
-        leanIM.queryConversation();
+        leanIM.setHadRead();
+        // leanIM.setOnQueryConversationSuccessListener(conversations -> {
+        //     Printer.i("共有会话: " + conversations.size() + " 个");
+        //     for (AVIMConversation conversation : conversations) {
+        //         Printer.i("conversation ID = " + conversation.getConversationId());
+        //     }
+        // });
+        // leanIM.queryConversation();
     }
 
 

@@ -358,6 +358,7 @@ public class LeanIM extends BmobBase {
             return;
         }
         AVIMConversationsQuery query = localClient.getConversationsQuery();
+        query.setWithLastMessagesRefreshed(true);
         query.whereContainsIn("m", Collections.singletonList(localUser));
         query.findInBackground(new AVIMConversationQueryCallback() {
             @Override
@@ -393,6 +394,7 @@ public class LeanIM extends BmobBase {
         }
         AVIMConversationsQuery query = localClient.getConversationsQuery();
         query.whereEqualTo("objectId", objectId);
+        query.setWithLastMessagesRefreshed(true);
         query.findInBackground(new AVIMConversationQueryCallback() {
             @Override
             public void done(List<AVIMConversation> convs, AVIMException e) {
@@ -412,7 +414,6 @@ public class LeanIM extends BmobBase {
             }
         });
     }
-
 
     /**
      * 查询消息 (根据指定会话)
@@ -434,6 +435,16 @@ public class LeanIM extends BmobBase {
                 }
             }
         });
+    }
+
+    /**
+     * 获取指定会话的最近一条消息
+     *
+     * @param conversation 指定会话
+     * @return 最近一条消息
+     */
+    public AVIMMessage queryLastMessage(AVIMConversation conversation) {
+        return conversation.getLastMessage();
     }
 
     /**
@@ -464,9 +475,23 @@ public class LeanIM extends BmobBase {
      * 会话处理器
      */
     public static class ConversationHandler extends AVIMConversationEventHandler {
+
+        /*
+         * 实现本方法来处理当前用户被邀请到某个聊天对话事件
+         *
+         * @param client       本地用户
+         * @param conversation 被邀请的聊天对话
+         * @since 3.0
+         */
+        @Override
+        public void onInvited(AVIMClient client, AVIMConversation conversation, String invitedBy) {
+            // 当前 clientId（Jerry）被邀请到对话，执行此处逻辑
+            Printer.v("被 [" + invitedBy + "] 邀请");
+        }
+
         @Override
         public void onMemberLeft(AVIMClient client, AVIMConversation conversation, List<String> members, String kickedBy) {
-            Printer.v("成员 [" + client.getClientId() + "] 离线了");
+            Printer.v("成员 [" + client.getClientId() + "] 退出了");
         }
 
         @Override
@@ -484,18 +509,12 @@ public class LeanIM extends BmobBase {
 
         }
 
-        /*
-         * 实现本方法来处理当前用户被邀请到某个聊天对话事件
-         *
-         * @param client       本地用户
-         * @param conversation 被邀请的聊天对话
-         * @since 3.0
-         */
         @Override
-        public void onInvited(AVIMClient client, AVIMConversation conversation, String invitedBy) {
-            // 当前 clientId（Jerry）被邀请到对话，执行此处逻辑
-            Printer.v("被 [" + invitedBy + "] 邀请");
+        public void onUnreadMessagesCountUpdated(AVIMClient client, AVIMConversation conversation) {
+            Printer.v("当前未读消息数" + conversation.getUnreadMessagesCount());
+            UnreadMessageUpdatedNext(conversation);
         }
+
     }
 
 
@@ -543,6 +562,23 @@ public class LeanIM extends BmobBase {
     }
 
     /* -------------------------------------------- impl -------------------------------------------- */
+
+    // ---------------- 监听器 [UnreadMessageUpdated] ----------------
+    private static OnUnreadMessageUpdatedListener onUnreadMessageUpdatedListeners;
+
+    public static interface OnUnreadMessageUpdatedListener {
+        void UnreadMessageUpdated(AVIMConversation conversation);
+    }
+
+    public static void setOnUnreadMessageUpdatedListener(OnUnreadMessageUpdatedListener onUnreadMessageUpdatedListener) {
+        onUnreadMessageUpdatedListeners = onUnreadMessageUpdatedListener;
+    }
+
+    private static void UnreadMessageUpdatedNext(AVIMConversation conversation) {
+        if (onUnreadMessageUpdatedListeners != null) {
+            onUnreadMessageUpdatedListeners.UnreadMessageUpdated(conversation);
+        }
+    }
 
     // ---------------- 监听器 [ConnectPause] ----------------
     private static OnConnectPauseListener onConnectPauseListeners;
