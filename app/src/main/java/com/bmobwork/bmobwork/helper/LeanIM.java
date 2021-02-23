@@ -42,7 +42,7 @@ public class LeanIM extends BmobBase {
     private AVIMClient localClient;// 发送者
     private AVIMConversation conversation;// 会话
 
-    private int RETRY = 10;// 重试次数
+    private int RETRY = 999999999;// 重试次数
     private int QUERY_LIMIT = 99;// 一次查询的限制条数
     private int client_count = 0;// 上线计数器 (用于失败时尝试)
     private int conversation_count = 0;// 开启会话计数器 (用于失败时尝试)
@@ -97,7 +97,7 @@ public class LeanIM extends BmobBase {
                 } else if (client_count < RETRY) {
                     client_count++;
                     Printer.w("正在重试第 " + client_count + " 次上线");
-                    new Handler().postDelayed(() -> online(localUser), 1000);
+                    new Handler().postDelayed(() -> online(localUser), 50);
 
                 } else {
                     client_count = 0;// 复位

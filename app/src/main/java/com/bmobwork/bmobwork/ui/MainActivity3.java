@@ -41,7 +41,7 @@ public class MainActivity3 extends AppCompatActivity {
 
     private List<Messagebean> messages = new ArrayList<>();
 
-    private int flag = 1;
+    private int flag = 0;
     private String localUser = flag == 0 ? "maqianli" : "xinmiao";
     private String targetUser = flag == 0 ? "xinmiao" : "maqianli";
 
@@ -81,7 +81,9 @@ public class MainActivity3 extends AppCompatActivity {
         // 2.接收监听
         LeanIM.setOnReceiverMessageListener(avimMessage -> {
             Messagebean messagebean = new Messagebean();
-            messagebean.setReceiver(avimMessage.getFrom().equals(targetUser));
+            AVIMMessage.AVIMMessageIOType messageIOType = avimMessage.getMessageIOType();
+            Printer.i("IOType = " + messageIOType);
+            messagebean.setReceiver(messageIOType == AVIMMessage.AVIMMessageIOType.AVIMMessageIOTypeIn);
             if (avimMessage instanceof AVIMTextMessage) {
                 messagebean.setContent(((AVIMTextMessage) avimMessage).getText());
             } else if (avimMessage instanceof AVIMLocationMessage) {
@@ -108,27 +110,28 @@ public class MainActivity3 extends AppCompatActivity {
             leanIM.setOnQueryConversationSuccessListener(conversations -> {
                 // 5.查询消息
                 leanIM.setOnQueryMessageSuccessListener(avimMessages -> {
-                    Printer.v("avimMessages = " + avimMessages.size());
-                    // 先清空
-                    messages.clear();
-                    // 转换成业务bean
-                    for (AVIMMessage avimMessage : avimMessages) {
-                        Messagebean messagebean = new Messagebean();
-                        messagebean.setReceiver(avimMessage.getFrom().equals(targetUser));
-                        if (avimMessage instanceof AVIMTextMessage) {
-                            messagebean.setContent(((AVIMTextMessage) avimMessage).getText());
-                        } else if (avimMessage instanceof AVIMLocationMessage) {
-                            AVIMLocationMessage locationMessage = (AVIMLocationMessage) avimMessage;
-                            AVGeoPoint location = locationMessage.getLocation();
-                            double lat = location.getLatitude();
-                            double lng = location.getLongitude();
-                            String des = locationMessage.getText();
-                            messagebean.setContent(des + "(" + lat + "," + lng + ")");
-                        }
-                        messages.add(messagebean);
-                    }
                     // 主线程
                     runOnUiThread(() -> {
+                        Printer.v("avimMessages = " + avimMessages.size());
+                        // 先清空
+                        messages.clear();
+                        // 转换成业务bean
+                        for (AVIMMessage avimMessage : avimMessages) {
+                            Messagebean messagebean = new Messagebean();
+                            messagebean.setReceiver(avimMessage.getFrom().equals(targetUser));
+                            if (avimMessage instanceof AVIMTextMessage) {
+                                messagebean.setContent(((AVIMTextMessage) avimMessage).getText());
+                            } else if (avimMessage instanceof AVIMLocationMessage) {
+                                AVIMLocationMessage locationMessage = (AVIMLocationMessage) avimMessage;
+                                AVGeoPoint location = locationMessage.getLocation();
+                                double lat = location.getLatitude();
+                                double lng = location.getLongitude();
+                                String des = locationMessage.getText();
+                                messagebean.setContent(des + "(" + lat + "," + lng + ")");
+                            }
+                            messages.add(messagebean);
+                        }
+
                         // 刷新UI
                         adapter.notifys(messages);
                         // 滑动到底部
