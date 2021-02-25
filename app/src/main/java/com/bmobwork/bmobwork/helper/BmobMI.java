@@ -30,8 +30,7 @@ import cn.bmob.v3.exception.BmobException;
 
 /*
  * Created by Administrator on 2021/2/16.
- * 该类为即时通讯
- * // TODO: 2021/2/16 该类需要测试
+ * 该类为即时通讯 (暂时不用, 由LeanIM类代为工作, 但保留预备方案)
  */
 public class BmobMI extends BmobBase {
     

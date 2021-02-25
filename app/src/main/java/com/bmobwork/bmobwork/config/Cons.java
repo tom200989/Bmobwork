@@ -6,7 +6,8 @@ package com.bmobwork.bmobwork.config;
 public class Cons {
     // 日志
     public final static String TAG = "bmobworker";
-    // app基本配置
+    
+    // Bmob基本配置
     public final static String APP_ID = "c1abf57050a339d5664c874c40c5bbd8";
     public final static String SECRET_KEY = "b827ce5cb3ef2041";
     public final static String MASTER_KEY = "78dc0dc75396dd1be84a3252767aaaa0";

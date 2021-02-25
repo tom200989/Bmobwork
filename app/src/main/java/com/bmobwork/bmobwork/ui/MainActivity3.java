@@ -12,7 +12,7 @@ import android.widget.Toast;
 import com.bmobwork.bmobwork.R;
 import com.bmobwork.bmobwork.demo.MessageAdapter;
 import com.bmobwork.bmobwork.demo.Messagebean;
-import com.bmobwork.bmobwork.demo.Printer;
+import com.bmobwork.bmobwork.utils.Printer;
 import com.bmobwork.bmobwork.helper.LeanIM;
 
 import java.util.ArrayList;

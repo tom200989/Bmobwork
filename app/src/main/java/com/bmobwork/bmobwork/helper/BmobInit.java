@@ -21,10 +21,10 @@ public class BmobInit extends BmobBase {
     public static void init(Application app) {
         // BMOB需要: 初始化
         Bmob.initialize(app, Cons.APP_ID);
-        // LeanIM 必需
+        // LeanIM Storage 必需
         AVOSCloud.initialize(Cons.LEAN_ID, Cons.LEAN_KEY);
         AVOSCloud.setLogLevel(AVLogger.Level.VERBOSE);
-        // LeanIM 必需
+        // LeanIM IM 必需
         AVConnectionManager manager = AVConnectionManager.getInstance();
         manager.startConnection(null);
     }

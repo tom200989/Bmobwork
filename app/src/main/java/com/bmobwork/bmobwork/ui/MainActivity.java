@@ -8,7 +8,7 @@ import com.bmobwork.bmobwork.R;
 import com.bmobwork.bmobwork.bean.User;
 import com.bmobwork.bmobwork.config.Cons;
 import com.bmobwork.bmobwork.demo.Person;
-import com.bmobwork.bmobwork.demo.Printer;
+import com.bmobwork.bmobwork.utils.Printer;
 import com.bmobwork.bmobwork.demo.Worker;
 import com.bmobwork.bmobwork.helper.BmobDB;
 import com.bmobwork.bmobwork.helper.BmobFi;

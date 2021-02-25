@@ -1,4 +1,4 @@
-package com.bmobwork.bmobwork.demo;
+package com.bmobwork.bmobwork.utils;
 
 import com.bmobwork.bmobwork.config.Cons;
 import com.bmobwork.bmobwork.log.Legg;

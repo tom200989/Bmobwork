@@ -3,7 +3,7 @@ package com.bmobwork.bmobwork.helper;
 import android.os.Handler;
 import android.text.TextUtils;
 
-import com.bmobwork.bmobwork.demo.Printer;
+import com.bmobwork.bmobwork.utils.Printer;
 
 import java.util.Collections;
 import java.util.List;
