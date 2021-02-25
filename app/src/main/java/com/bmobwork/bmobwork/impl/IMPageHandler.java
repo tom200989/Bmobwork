@@ -1,4 +1,4 @@
-package com.bmobwork.bmobwork.impl;
+package com.bmobwork.bmobwork.Impl;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -12,7 +12,6 @@ import cn.bmob.newim.listener.MessageListHandler;
  * 该类为单个页面需求时的消息监听器
  */
 public class IMPageHandler implements MessageListHandler {
-
     @Override
     public void onMessageReceive(List<MessageEvent> messageEvents) {
         /*

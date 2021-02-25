@@ -40,6 +40,7 @@ dependencies {
     api fileTree(dir: "libs", include: ["*.jar"])
     api 'androidx.appcompat:appcompat:1.2.0'
     api 'androidx.constraintlayout:constraintlayout:2.0.4'
+    api 'androidx.recyclerview:recyclerview:1.2.0-beta02'
 
     // BMOB需要: 核心包
     api 'cn.bmob.android:bmob-sdk:3.7.8'
@@ -59,7 +60,7 @@ dependencies {
     api(name: 'bmob-im-2.1.5', ext: 'aar')
     // BMOB需要: eventbus
     api 'org.greenrobot:eventbus:3.2.0'
-    api 'androidx.recyclerview:recyclerview:1.2.0-beta01'
+    
 
     // LeanCloudIM所需
     api 'cn.leancloud:storage-android:7.2.2'
