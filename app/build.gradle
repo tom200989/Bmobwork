@@ -1,4 +1,6 @@
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
+//apply plugin: 'com.android.application'
+
 
 android {
     // BMOB需要
@@ -8,7 +10,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "com.bmobwork.bmobwork"
+        // applicationId "com.bmobwork.bmobwork"
         minSdkVersion 21
         targetSdkVersion 30
         versionCode 1
@@ -60,7 +62,6 @@ dependencies {
     api(name: 'bmob-im-2.1.5', ext: 'aar')
     // BMOB需要: eventbus
     api 'org.greenrobot:eventbus:3.2.0'
-    
 
     // LeanCloudIM所需
     api 'cn.leancloud:storage-android:7.2.2'
