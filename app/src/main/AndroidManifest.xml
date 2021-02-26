@@ -29,6 +29,9 @@
         android:usesCleartextTraffic="true"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning,UnusedAttribute">
 
+<!--    1-注意: 发出包前要把<application>里的所有标签全部被注释-->
+<!--    2-同时复制<application>里的所有标签到主工程中, 且把<provider>的authority名改为主工程包名-->
+
 <!--        &lt;!&ndash; BMOB需要:IM &ndash;&gt;-->
 <!--        <meta-data-->
 <!--            android:name="Bmob_APP_KEY"-->
