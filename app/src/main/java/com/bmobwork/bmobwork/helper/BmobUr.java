@@ -51,7 +51,7 @@ public class BmobUr extends BmobBase {
             public void done(User userbean, BmobException e) {
                 if (e == null) {
                     printInfo("BmobUr:login()-> 登录成功, User = " + userbean.getUsername());
-                    LoginSuccessNext(userbean);
+                    LoginSuccessNext(userbean);// 把流程封装好
                 } else {
                     LoginFailedNext();
                     BmobError("BmobUr:login()-> 登录失败", e);
